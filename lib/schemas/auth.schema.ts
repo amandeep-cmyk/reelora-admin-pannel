@@ -18,8 +18,6 @@ export const phoneSchema = z
   })
   .refine((value) => /^[6-9]\d{9}$/.test(value), "Enter a valid 10-digit mobile number.")
 
-export const otpSchema = z.string().regex(/^\d{6}$/, "Enter the 6-digit code.")
-
 export const apiRoleSchema = z.enum(["user", "talent", "vendor", "admin", "team"])
 
 export const userSchema = z.object({
@@ -36,39 +34,49 @@ export const userSchema = z.object({
   updatedAt: z.string(),
 })
 
-export const sendOtpSchema = z.union([
-  z.object({ phone: phoneSchema }),
-  z.object({ email: z.email("Enter a valid email.") }),
-])
+export const loginSchema = z.object({
+  email: z.email("Enter a valid email."),
+  password: z.string().min(1, "Enter your password."),
+})
 
-export const verifyOtpSchema = z.union([
-  z.object({ phone: phoneSchema, otp: otpSchema }),
-  z.object({ email: z.email("Enter a valid email."), otp: otpSchema }),
-])
+export const forgotPasswordSchema = z.object({
+  email: z.email("Enter a valid email."),
+})
 
-export const sendOtpResponseSchema = successSchema(
+export const resetPasswordSchema = z.object({
+  email: z.email("Enter a valid email."),
+  otp: z.string().regex(/^\d{6}$/, "Enter the 6-digit code."),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters.")
+    .max(100, "Password must be 100 characters or less.")
+    .regex(/[A-Z]/, "Include an uppercase letter.")
+    .regex(/[a-z]/, "Include a lowercase letter.")
+    .regex(/\d/, "Include a number.")
+    .regex(/[@$!%*?&]/, "Include one of @$!%*?&."),
+})
+
+export const otpSentSchema = successSchema(
   z.object({
     expiresInSeconds: z.number(),
-    otp: z.string(),
+    otp: z.string().optional(),
   })
 )
 
-export const verifyOtpResponseSchema = successSchema(
-  z.discriminatedUnion("isNewUser", [
-    z.object({
-      isNewUser: z.literal(false),
-      token: z.string(),
-      user: userSchema,
-    }),
-    z.object({
-      isNewUser: z.literal(true),
-      registrationToken: z.string(),
-    }),
-  ])
+export const authSessionSchema = successSchema(
+  z.object({
+    token: z.string(),
+    user: userSchema,
+  })
 )
 
 export const meResponseSchema = successSchema(userSchema)
 
+export const doneSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+  data: z.unknown().nullable().optional(),
+})
+
 export type ApiUser = z.infer<typeof userSchema>
-export type SendOtpInput = z.input<typeof sendOtpSchema>
-export type VerifyOtpInput = z.input<typeof verifyOtpSchema>
+export type LoginInput = z.input<typeof loginSchema>

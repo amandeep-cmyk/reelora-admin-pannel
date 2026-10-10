@@ -1,7 +1,8 @@
 export const endpoints = {
   auth: {
-    sendOtp: "/api/auth/send-otp",
-    verifyOtp: "/api/auth/verify-otp",
+    login: "/api/auth/login",
+    forgotPassword: "/api/auth/forgot-password",
+    resetPassword: "/api/auth/reset-password",
     me: "/api/auth/me",
   },
   bookings: {
@@ -21,5 +22,13 @@ export const endpoints = {
     team: "/api/admin/team",
     categories: "/api/admin/categories",
     category: (id: string) => `/api/admin/categories/${id}`,
+  },
+  marketing: {
+    banners: "/api/marketing/banners",
+    banner: (id: string) => `/api/marketing/banners/${id}`,
+    events: "/api/marketing/events",
+    event: (id: string) => `/api/marketing/events/${id}`,
+    talents: "/api/marketing/talents",
+    talent: (id: string) => `/api/marketing/talents/${id}`,
   },
 } as const
