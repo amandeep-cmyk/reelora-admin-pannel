@@ -75,7 +75,8 @@ export async function getAdminTeam() {
 export async function createTeamMember(body: {
   fullName: string
   phone?: string
-  email?: string
+  email: string
+  password: string
   city: string
   place: string
 }) {

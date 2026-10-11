@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import { BannerList } from "@/components/screens/ops-screens"
+import { BannersView } from "./banners-view"
 
 export const metadata: Metadata = { title: "Banners" }
 
 export default function Page() {
-  return <BannerList />
+  return <BannersView />
 }

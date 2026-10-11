@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import { ProductList } from "@/components/screens/catalog-screens"
+import { ProductsView } from "./products-view"
 
 export const metadata: Metadata = { title: "Products" }
 
 export default function Page() {
-  return <ProductList />
+  return <ProductsView />
 }

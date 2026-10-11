@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import { VendorProfile } from "@/components/screens/people-screens"
+import { VendorDetailView } from "./vendor-detail-view"
 
 export const metadata: Metadata = { title: "Vendor" }
 
 export default function Page() {
-  return <VendorProfile />
+  return <VendorDetailView />
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import { TeamList } from "@/components/screens/ops-screens"
+import { TeamView } from "./team-view"
 
 export const metadata: Metadata = { title: "Team" }
 
 export default function Page() {
-  return <TeamList />
+  return <TeamView />
 }

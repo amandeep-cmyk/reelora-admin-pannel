@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import { ApprovalList } from "@/components/screens/catalog-screens"
+import { ApprovalsView } from "./approvals-view"
 
 export const metadata: Metadata = { title: "Product approval" }
 
 export default function Page() {
-  return <ApprovalList />
+  return <ApprovalsView />
 }

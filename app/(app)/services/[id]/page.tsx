@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import { ServiceProfile } from "@/components/screens/catalog-screens"
+import { ServiceDetailView } from "./service-detail-view"
 
 export const metadata: Metadata = { title: "Service" }
 
 export default function Page() {
-  return <ServiceProfile />
+  return <ServiceDetailView />
 }

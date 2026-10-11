@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import {
   clearSession,
   getAccessToken,
@@ -31,11 +24,13 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+// Holds the logged-in admin user for the whole app.
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null)
   const [ready, setReady] = useState(false)
 
-  const setSession = useCallback((token: string, apiUser: ApiUser) => {
+  // Saves the token only if the account role is admin.
+  function setSession(token: string, apiUser: ApiUser) {
     if (apiUser.role !== "admin") {
       clearSession()
       setUser(null)
@@ -46,13 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSessionUser(next)
     setUser(next)
     return next
-  }, [])
+  }
 
-  const logout = useCallback(() => {
+  function logout() {
     clearSession()
     setUser(null)
-  }, [])
+  }
 
+  // On first load: restore the saved user, then confirm with the server.
   useEffect(() => {
     function onClear() {
       setUser(null)
@@ -90,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={{ user, ready, setSession, logout }}>{children}</AuthContext.Provider>
 }
 
+// Hook pages use to read the current admin user.
 export function useAuth() {
   const value = useContext(AuthContext)
   if (!value) throw new Error("useAuth must be used inside AuthProvider")

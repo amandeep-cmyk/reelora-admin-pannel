@@ -59,7 +59,8 @@ api.interceptors.request.use((config) => {
     const token = getAccessToken()
     if (token) config.headers.set("Authorization", `Bearer ${token}`)
   }
-  if (config.data !== undefined && !config.headers.get("Content-Type")) {
+  const isForm = typeof FormData !== "undefined" && config.data instanceof FormData
+  if (config.data !== undefined && !isForm && !config.headers.get("Content-Type")) {
     config.headers.set("Content-Type", "application/json")
   }
   return config

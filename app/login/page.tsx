@@ -4,6 +4,7 @@ import { LoginForm } from "@/components/auth/login-form"
 
 export const metadata: Metadata = { title: "Log in" }
 
+// Admin login page with photo on the left and the form on the right.
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#212121] p-3 md:p-4">

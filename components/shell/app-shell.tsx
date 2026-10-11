@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
@@ -33,7 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/components/providers/auth-provider"
-import { useCrm } from "@/components/providers/crm-provider"
+import { loadBookings, loadServices } from "@/lib/load-admin"
 import { cn } from "cn"
 
 type Item = { href: string; label: string; icon: LucideIcon }
@@ -59,12 +59,13 @@ function isActive(href: string, pathname: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
+// Layout around every admin page: top bar, sidebar, logout, login check.
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, ready, logout } = useAuth()
-  const crm = useCrm()
   const router = useRouter()
   const pathname = usePathname()
 
+  // Send visitors without a session to the login page.
   useEffect(() => {
     if (ready && !user) router.replace("/login")
   }, [ready, user, router])
@@ -89,6 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </linearGradient>
         </defs>
       </svg>
+
       <header className="flex items-center gap-4 px-4 py-4 md:px-6">
         <Link href="/dashboard" className="shrink-0">
           <Logo />
@@ -122,24 +124,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <NavLink key={item.href} item={item} active={isActive(item.href, pathname)} />
             ))}
           </nav>
-          <button
-            type="button"
-            onClick={signOut}
-            className="mt-4 flex items-center gap-3 px-2 py-2.5 text-sm text-[#E1306C]"
-          >
+          <button type="button" onClick={signOut} className="mt-4 flex items-center gap-3 px-2 py-2.5 text-sm text-[#E1306C]">
             <LogOut className="size-4" />
             Logout
           </button>
         </aside>
+
         <div className="min-w-0 flex-1 px-3 pb-10 md:pr-5 md:pl-2">
-          {crm.error ? (
-            <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl bg-[#2a2a2a] px-4 py-3 text-sm">
-              <span>{crm.error}</span>
-              <button type="button" className="text-[#E1306C]" onClick={() => void crm.reload()}>
-                Retry
-              </button>
-            </div>
-          ) : null}
           <nav className="mb-3 flex gap-2 overflow-x-auto md:hidden">
             {items.map((item) => (
               <Link
@@ -154,9 +145,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="flex flex-col gap-4">
-            {crm.ready ? children : <p className="px-2 py-10 text-sm text-[#B4B4B4]">Loading admin data…</p>}
-          </div>
+          <div className="flex flex-col gap-4">{children}</div>
         </div>
       </div>
     </div>
@@ -180,43 +169,10 @@ function NavLink({ item, active }: { item: Item; active: boolean }) {
   )
 }
 
+// Top search box: typing then Enter opens the search page.
 function GlobalSearch() {
-  const crm = useCrm()
   const router = useRouter()
   const [query, setQuery] = useState("")
-  const [open, setOpen] = useState(false)
-
-  const hits = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    if (needle.length < 1) return []
-    const rows: { href: string; label: string; kind: string }[] = []
-    crm.talents.forEach((item) => {
-      if (`${item.name} ${item.category}`.toLowerCase().includes(needle)) {
-        rows.push({ href: `/talents/${item.id}`, label: item.name, kind: "Talent" })
-      }
-    })
-    crm.vendors.forEach((item) => {
-      if (`${item.name} ${item.category}`.toLowerCase().includes(needle)) {
-        rows.push({ href: `/vendors/${item.id}`, label: item.name, kind: "Vendor" })
-      }
-    })
-    crm.clients.forEach((item) => {
-      if (item.name.toLowerCase().includes(needle)) {
-        rows.push({ href: `/clients/${item.id}`, label: item.name, kind: "Client" })
-      }
-    })
-    crm.services.forEach((item) => {
-      if (`${item.title} ${item.category} ${item.city}`.toLowerCase().includes(needle)) {
-        rows.push({ href: `/services/${item.id}`, label: item.title, kind: "Service" })
-      }
-    })
-    crm.bookings.forEach((item) => {
-      if (`${item.title} ${item.clientName} ${item.category}`.toLowerCase().includes(needle)) {
-        rows.push({ href: `/bookings/${item.id}`, label: item.title, kind: "Booking" })
-      }
-    })
-    return rows.slice(0, 8)
-  }, [crm, query])
 
   return (
     <form
@@ -224,52 +180,51 @@ function GlobalSearch() {
       onSubmit={(event) => {
         event.preventDefault()
         router.push(`/search?q=${encodeURIComponent(query.trim())}`)
-        setOpen(false)
       }}
     >
       <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-[#B4B4B4]" />
       <input
         value={query}
-        onChange={(event) => {
-          setQuery(event.target.value)
-          setOpen(true)
-        }}
-        onFocus={() => setOpen(true)}
+        onChange={(event) => setQuery(event.target.value)}
         placeholder="Global Search"
         className="h-11 w-full rounded-full border border-white/10 bg-[#2a2a2a] pr-4 pl-11 text-sm text-white outline-none placeholder:text-white/40 focus:border-[#E1306C]"
       />
-      {open && hits.length > 0 ? (
-        <div className="absolute top-12 z-30 w-full overflow-hidden rounded-2xl border border-white/10 bg-[#2a2a2a] py-1 shadow-xl">
-          {hits.map((hit) => (
-            <button
-              key={hit.href + hit.label}
-              type="button"
-              className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-white/5"
-              onClick={() => {
-                router.push(hit.href)
-                setOpen(false)
-              }}
-            >
-              <span>{hit.label}</span>
-              <span className="text-xs text-[#B4B4B4]">{hit.kind}</span>
-            </button>
-          ))}
-        </div>
-      ) : null}
     </form>
   )
 }
 
+// Bell menu with draft listing and unassigned booking counts.
 function NotificationBell() {
-  const crm = useCrm()
-  const drafts = crm.services.filter((item) => item.listingStatus !== "published").length
-  const unassigned = crm.bookings.filter(
-    (item) => !item.teamMemberId && item.status !== "cancelled" && item.status !== "refunded" && item.status !== "pending_payment",
-  ).length
+  const [drafts, setDrafts] = useState(0)
+  const [unassigned, setUnassigned] = useState(0)
+
+  useEffect(() => {
+    let live = true
+    Promise.all([loadServices(), loadBookings()])
+      .then(([services, bookings]) => {
+        if (!live) return
+        setDrafts(services.filter((item) => item.listingStatus !== "published").length)
+        setUnassigned(
+          bookings.filter(
+            (item) =>
+              !item.teamMemberId &&
+              item.status !== "cancelled" &&
+              item.status !== "refunded" &&
+              item.status !== "pending_payment",
+          ).length,
+        )
+      })
+      .catch(() => {})
+    return () => {
+      live = false
+    }
+  }, [])
+
   const notes = [
     drafts ? `${drafts} listings are still drafts` : "No draft listings",
     unassigned ? `${unassigned} bookings have no team member` : "Every live booking has a team member",
   ]
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

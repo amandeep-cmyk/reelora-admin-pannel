@@ -247,31 +247,33 @@ export const teamCreateSchema = z
   .object({
     fullName: z.string().trim().min(2, "Enter a name.").max(60, "Name must be 60 characters or less."),
     phone: z.string().trim().optional(),
-    email: z.string().trim().optional(),
+    email: z.email("Enter a valid email."),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters.")
+      .max(100, "Password must be 100 characters or less.")
+      .regex(/[A-Z]/, "Include an uppercase letter.")
+      .regex(/[a-z]/, "Include a lowercase letter.")
+      .regex(/\d/, "Include a number.")
+      .regex(/[@$!%*?&]/, "Include one of @$!%*?&."),
     city: z.string().trim().min(1, "Enter a city.").max(80, "City must be 80 characters or less."),
     place: z.string().trim().min(1, "Enter a place.").max(120, "Place must be 120 characters or less."),
   })
   .superRefine((value, ctx) => {
     const phone = value.phone?.trim() ?? ""
-    const email = value.email?.trim() ?? ""
-    if (!phone && !email) {
-      ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a phone or an email." })
-    }
     if (phone && !phoneSchema.safeParse(phone).success) {
       ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a valid 10-digit mobile number." })
     }
-    if (email && !z.email().safeParse(email).success) {
-      ctx.addIssue({ code: "custom", path: ["email"], message: "Enter a valid email." })
-    }
   })
   .transform((value) => {
-    const next: { fullName: string; city: string; place: string; phone?: string; email?: string } = {
+    const next: { fullName: string; city: string; place: string; email: string; password: string; phone?: string } = {
       fullName: value.fullName,
       city: value.city,
       place: value.place,
+      email: value.email.trim(),
+      password: value.password,
     }
     if (value.phone?.trim()) next.phone = phoneSchema.parse(value.phone)
-    if (value.email?.trim()) next.email = value.email.trim()
     return next
   })
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import { ClientList } from "@/components/screens/people-screens"
+import { ClientsView } from "./clients-view"
 
 export const metadata: Metadata = { title: "Clients" }
 
 export default function Page() {
-  return <ClientList />
+  return <ClientsView />
 }

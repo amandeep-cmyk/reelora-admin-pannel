@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     template: "%s · Reelora Admin",
   },
   description: "Admin dashboard for Reelora bookings, talent, vendors and revenue.",
+  manifest: "/manifest.webmanifest",
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
