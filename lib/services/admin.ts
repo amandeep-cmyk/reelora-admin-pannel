@@ -90,13 +90,16 @@ export async function getAdminCategories() {
   return parseResponse(adminCategoriesResponseSchema, data).data
 }
 
-export async function createCategory(name: string) {
-  const parsed = categoryBodySchema.parse({ name })
+export async function createCategory(name: string, verticals: Array<"shooting" | "events">) {
+  const parsed = categoryBodySchema.parse({ name, verticals })
   const { data } = await api.post(endpoints.admin.categories, parsed)
   return parseResponse(categoryResponseSchema, data)
 }
 
-export async function updateCategory(id: string, body: { name?: string; isActive?: boolean }) {
+export async function updateCategory(
+  id: string,
+  body: { name?: string; isActive?: boolean; verticals?: Array<"shooting" | "events"> },
+) {
   const { data } = await api.patch(endpoints.admin.category(id), body)
   return parseResponse(categoryResponseSchema, data)
 }

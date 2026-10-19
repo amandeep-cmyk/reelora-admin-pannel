@@ -7,6 +7,14 @@ import { loadCategories, loadServices } from "@/lib/load-admin"
 import { createCategory, updateCategory } from "@/lib/services/admin"
 import type { Category } from "@/lib/types"
 
+function verticalLabel(verticals: Array<"shooting" | "events">) {
+  const hasShooting = verticals.includes("shooting")
+  const hasEvents = verticals.includes("events")
+  if (hasShooting && hasEvents) return "Shooting · Events"
+  if (hasEvents) return "Events"
+  return "Shooting"
+}
+
 export function CategoriesView() {
   const [categories, setCategories] = useState<Category[]>([])
   const [counts, setCounts] = useState<Record<string, number>>({})
@@ -39,16 +47,29 @@ export function CategoriesView() {
     refresh()
   }, [])
 
-  async function saveName(name: string) {
+  async function saveCategory(name: string, verticals: Array<"shooting" | "events">) {
     if (editing) {
-      const result = await updateCategory(editing.id, { name })
-      setCategories((list) => list.map((item) => (item.id === editing.id ? { ...item, name: result.data.name } : item)))
+      const result = await updateCategory(editing.id, { name, verticals })
+      setCategories((list) =>
+        list.map((item) =>
+          item.id === editing.id
+            ? {
+                ...item,
+                name: result.data.name,
+                verticals: result.data.verticals?.length
+                  ? result.data.verticals
+                  : ["shooting", "events"],
+              }
+            : item,
+        ),
+      )
     } else {
-      const result = await createCategory(name)
+      const result = await createCategory(name, verticals)
       const created: Category = {
         id: result.data._id,
         name: result.data.name,
         status: result.data.isActive ? "Active" : "Inactive",
+        verticals: result.data.verticals?.length ? result.data.verticals : ["shooting", "events"],
       }
       setCategories((list) => [...list, created].sort((a, b) => a.name.localeCompare(b.name)))
     }
@@ -71,7 +92,10 @@ export function CategoriesView() {
 
   return (
     <Page title="Categories" action={<GradientButton onClick={() => setOpen(true)}>Add Category</GradientButton>}>
-      <p className="mb-5 max-w-2xl text-sm text-[#B4B4B4]">Active categories are the ones providers can choose on a service.</p>
+      <p className="mb-5 max-w-2xl text-sm text-[#B4B4B4]">
+        Active categories are the ones providers can choose on a service. Assign each category to
+        Shooting, Events, or both.
+      </p>
 
       {loading ? <p className="mb-4 text-sm text-[#B4B4B4]">Loading categories…</p> : null}
       {error ? (
@@ -89,10 +113,10 @@ export function CategoriesView() {
           <ListSearch value={query} onChange={setQuery} />
         </div>
         <div className="pink-scroll overflow-x-auto">
-          <table className="w-full min-w-[560px] text-left text-sm">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="text-[#B4B4B4]">
-                {["Name", "Listings", "Status", "Action"].map((head) => (
+                {["Name", "Verticals", "Listings", "Status", "Action"].map((head) => (
                   <th key={head} className="px-3 py-3 font-medium">
                     {head}
                   </th>
@@ -103,13 +127,14 @@ export function CategoriesView() {
               {rows.map((row) => (
                 <tr key={row.id} className="border-t border-white/8 text-white">
                   <td className="px-3 py-4">{row.name}</td>
+                  <td className="px-3 py-4 text-[#B4B4B4]">{verticalLabel(row.verticals)}</td>
                   <td className="px-3 py-4">{String(counts[row.name] ?? 0)}</td>
                   <td className="px-3 py-4">
                     <StatusText value={row.status} />
                   </td>
                   <td className="px-3 py-4 text-right">
                     <button type="button" className="mr-3 text-[#E1306C]" onClick={() => setEditId(row.id)}>
-                      Rename
+                      Edit
                     </button>
                     <button type="button" className="text-[#B4B4B4] hover:text-white" onClick={() => void toggleActive(row)}>
                       {row.status === "Active" ? "Deactivate" : "Activate"}
@@ -119,7 +144,7 @@ export function CategoriesView() {
               ))}
               {rows.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-10 text-[#B4B4B4]">
+                  <td colSpan={5} className="px-3 py-10 text-[#B4B4B4]">
                     No matching records.
                   </td>
                 </tr>
@@ -138,10 +163,11 @@ export function CategoriesView() {
       >
         <CategoryFields
           key={editing?.id || "new"}
-          title={editing ? "Rename category" : "Add category"}
+          title={editing ? "Edit category" : "Add category"}
           initialName={editing?.name ?? ""}
-          onSubmit={(name) => {
-            void saveName(name).catch(() => {})
+          initialVerticals={editing?.verticals ?? ["shooting", "events"]}
+          onSubmit={(name, verticals) => {
+            void saveCategory(name, verticals).catch(() => {})
           }}
         />
       </Modal>
@@ -152,24 +178,47 @@ export function CategoriesView() {
 function CategoryFields({
   title,
   initialName,
+  initialVerticals,
   onSubmit,
 }: {
   title: string
   initialName: string
-  onSubmit: (name: string) => void
+  initialVerticals: Array<"shooting" | "events">
+  onSubmit: (name: string, verticals: Array<"shooting" | "events">) => void
 }) {
   const [name, setName] = useState(initialName)
+  const [shooting, setShooting] = useState(initialVerticals.includes("shooting"))
+  const [events, setEvents] = useState(initialVerticals.includes("events"))
+
   return (
     <form
       className="grid gap-4"
       onSubmit={(event) => {
         event.preventDefault()
         if (name.trim().length < 2) return
-        onSubmit(name.trim())
+        const verticals: Array<"shooting" | "events"> = []
+        if (shooting) verticals.push("shooting")
+        if (events) verticals.push("events")
+        if (verticals.length === 0) return
+        onSubmit(name.trim(), verticals)
       }}
     >
       <h2 className="text-lg font-semibold">{title}</h2>
       <TextField label="Name" value={name} placeholder="Drone pilots" onChange={setName} />
+      <fieldset className="grid gap-2">
+        <legend className="text-sm text-[#B4B4B4]">Verticals</legend>
+        <label className="flex items-center gap-2 text-sm text-white">
+          <input type="checkbox" checked={shooting} onChange={(event) => setShooting(event.target.checked)} />
+          Shooting
+        </label>
+        <label className="flex items-center gap-2 text-sm text-white">
+          <input type="checkbox" checked={events} onChange={(event) => setEvents(event.target.checked)} />
+          Events
+        </label>
+        {!shooting && !events ? (
+          <p className="text-xs text-[#E1306C]">Pick at least one vertical.</p>
+        ) : null}
+      </fieldset>
       <GradientButton type="submit" className="mx-auto mt-2 w-40">
         Save
       </GradientButton>

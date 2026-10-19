@@ -285,12 +285,14 @@ export const categorySchema = z.object({
   _id: z.string(),
   name: z.string(),
   isActive: z.boolean(),
+  verticals: z.array(z.enum(["shooting", "events"])).optional().default(["shooting", "events"]),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 })
 
 export const categoryBodySchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters.").max(60, "Name must be 60 characters or less."),
+  verticals: z.array(z.enum(["shooting", "events"])).min(1, "Pick at least one vertical."),
 })
 
 export const paginationSchema = z.object({
