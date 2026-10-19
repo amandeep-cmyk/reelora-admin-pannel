@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { formatDate, formatInr } from "@/lib/money"
 import { loadBookings, loadTeam } from "@/lib/load-admin"
 import { assignBooking, setBookingStatus } from "@/lib/services/admin"
-import { bookingStatuses, type BookingStatus } from "@/lib/schemas/admin.schema"
+import type { BookingStatus } from "@/lib/schemas/admin.schema"
 import type { Booking, Member } from "@/lib/types"
 import { mapBooking } from "@/lib/map"
 
@@ -20,7 +20,6 @@ export function BookingDetailView() {
   const [loading, setLoading] = useState(true)
   const [missing, setMissing] = useState(false)
   const [memberId, setMemberId] = useState("")
-  const [status, setStatus] = useState("")
   const [pending, setPending] = useState("")
 
   // Load this booking and the team list for assignment.
@@ -55,7 +54,6 @@ export function BookingDetailView() {
 
   const row = booking
   const selectedMember = memberId || row.teamMemberId || ""
-  const selectedStatus = status || row.status
   const activeTeam = team.filter((item) => item.status === "Active")
   const providerName = row.talentName || row.vendorName || "Provider"
   const providerHref = row.talentId ? `/talents/${row.talentId}` : row.vendorId ? `/vendors/${row.vendorId}` : ""
@@ -76,13 +74,12 @@ export function BookingDetailView() {
   }
 
   async function onStatus() {
-    if (!bookingStatuses.includes(selectedStatus as BookingStatus)) return
+    const nextStatus: BookingStatus = "cancelled"
     setPending("status")
     try {
-      await setBookingStatus(row.id, selectedStatus as BookingStatus)
-      setBooking({ ...row, status: selectedStatus })
-      toast.success("Booking status updated.")
-      setStatus("")
+      await setBookingStatus(row.id, nextStatus)
+      setBooking({ ...row, status: nextStatus })
+      toast.success("Booking cancelled.")
     } catch {
       // Request layer may already show the error.
     } finally {
@@ -159,21 +156,15 @@ export function BookingDetailView() {
         </div>
         <div className="rounded-2xl bg-[#2a2a2a] p-4">
           <h2 className="mb-3 text-sm font-medium">Booking status</h2>
-          <select
-            value={selectedStatus}
-            onChange={(event) => setStatus(event.target.value)}
-            className="h-11 w-full rounded-xl border border-white/10 bg-[#1f1f1f] px-3 text-sm capitalize outline-none"
-          >
-            {bookingStatuses.map((item) => (
-              <option key={item} value={item}>
-                {item.replaceAll("_", " ")}
-              </option>
-            ))}
-          </select>
-          <p className="mt-2 text-xs text-[#B4B4B4]">Cancelling a paid booking starts a refund.</p>
-          <Button type="button" variant="gradient" className="mt-3" disabled={pending === "status"} onClick={() => void onStatus()}>
-            Save status
-          </Button>
+          <p className="text-sm capitalize text-white">{row.status.replaceAll("_", " ")}</p>
+          {["requested", "accepted", "confirmed_by_admin", "confirmed_by_provider"].includes(row.status) ? (
+            <>
+              <p className="mt-2 text-xs text-[#B4B4B4]">Admin override is limited to cancelling eligible cash bookings. It never records cash collection.</p>
+              <Button type="button" variant="gradient" className="mt-3" disabled={pending === "status"} onClick={() => void onStatus()}>
+                Cancel booking
+              </Button>
+            </>
+          ) : null}
         </div>
       </div>
       <div className="mt-6 flex flex-wrap gap-4 text-sm">

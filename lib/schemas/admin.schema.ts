@@ -2,6 +2,10 @@ import { z } from "zod"
 import { successSchema, phoneSchema } from "@/lib/schemas/auth.schema"
 
 export const bookingStatuses = [
+  "requested",
+  "accepted",
+  "rejected",
+  "awaiting_completion",
   "pending_payment",
   "booked",
   "paid_upfront",

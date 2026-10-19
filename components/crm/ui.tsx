@@ -71,7 +71,7 @@ export function StatCard({
 // Colors status words green or red when useful.
 export function StatusText({ value }: { value: string }) {
   const key = value.toLowerCase()
-  const good = ["active", "approved", "booked", "completed", "confirmed", "confirmed_by_admin", "paid_upfront", "in_progress", "settled", "published"]
+  const good = ["active", "approved", "accepted", "booked", "completed", "confirmed", "confirmed_by_admin", "paid_upfront", "in_progress", "awaiting_completion", "settled", "published"]
   const bad = ["inactive", "rejected", "cancelled", "refunded"]
   const tone = good.includes(key) ? "text-emerald-400" : bad.includes(key) ? "text-red-400" : "text-white"
   return <span className={cn("capitalize", tone)}>{value.replaceAll("_", " ")}</span>
