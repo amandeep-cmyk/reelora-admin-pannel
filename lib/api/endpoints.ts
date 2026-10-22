@@ -1,4 +1,8 @@
 export const endpoints = {
+  locations: {
+    states: "/api/locations/states",
+    cities: "/api/locations/cities",
+  },
   auth: {
     login: "/api/auth/login",
     forgotPassword: "/api/auth/forgot-password",

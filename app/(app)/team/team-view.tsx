@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { ZodError } from "zod"
 import { toast } from "sonner"
 import { GradientButton, Modal, Page, StatusText, TextField } from "@/components/crm/ui"
+import { CityStatePicker } from "@/components/location/city-state-picker"
 import { ListSearch } from "@/components/crm/person-bits"
 import { loadTeam } from "@/lib/load-admin"
 import { createTeamMember, setPersonActive } from "@/lib/services/admin"
@@ -150,6 +151,7 @@ function MemberFields({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [city, setCity] = useState("")
+  const [stateName, setStateName] = useState("")
   const [place, setPlace] = useState("")
   const [formError, setFormError] = useState("")
   const [pending, setPending] = useState(false)
@@ -180,7 +182,14 @@ function MemberFields({
       <TextField label="Phone" value={phone} placeholder="9876543210" onChange={setPhone} />
       <TextField label="Email" value={email} placeholder="ravi@relora.app" onChange={setEmail} />
       <TextField label="Password" value={password} placeholder="Password1!" type="password" onChange={setPassword} />
-      <TextField label="City" value={city} placeholder="Mumbai" onChange={setCity} />
+      <CityStatePicker
+        city={city}
+        state={stateName}
+        cityId="team-city"
+        stateId="team-state"
+        onCityChange={setCity}
+        onStateChange={setStateName}
+      />
       <div className="md:col-span-2">
         <TextField label="Place" value={place} placeholder="Andheri west" onChange={setPlace} />
       </div>
