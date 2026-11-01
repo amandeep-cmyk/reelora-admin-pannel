@@ -29,12 +29,26 @@ export const featuredTalentSchema = z.object({
   isActive: z.boolean(),
 })
 
+export const testimonialSchema = z.object({
+  _id: z.string(),
+  type: z.enum(["written", "video"]),
+  name: z.string(),
+  role: z.string(),
+  quote: z.string().optional().default(""),
+  imageUrl: z.string().optional().default(""),
+  videoUrl: z.string().optional().default(""),
+  sortOrder: z.number().optional().default(0),
+  isActive: z.boolean(),
+})
+
 export const bannerListSchema = successSchema(z.array(bannerSchema))
 export const bannerResponseSchema = successSchema(bannerSchema)
 export const eventListSchema = successSchema(z.array(eventSchema))
 export const eventResponseSchema = successSchema(eventSchema)
 export const talentListSchema = successSchema(z.array(featuredTalentSchema))
 export const talentResponseSchema = successSchema(featuredTalentSchema)
+export const testimonialListSchema = successSchema(z.array(testimonialSchema))
+export const testimonialResponseSchema = successSchema(testimonialSchema)
 export const deletedSchema = z.object({
   success: z.literal(true),
   message: z.string(),
@@ -44,3 +58,4 @@ export const deletedSchema = z.object({
 export type Banner = z.infer<typeof bannerSchema>
 export type MarketingEvent = z.infer<typeof eventSchema>
 export type FeaturedTalent = z.infer<typeof featuredTalentSchema>
+export type Testimonial = z.infer<typeof testimonialSchema>

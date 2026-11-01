@@ -8,6 +8,8 @@ import {
   eventResponseSchema,
   talentListSchema,
   talentResponseSchema,
+  testimonialListSchema,
+  testimonialResponseSchema,
 } from "@/lib/schemas/marketing.schema"
 
 export async function listBanners() {
@@ -67,5 +69,25 @@ export async function updateFeaturedTalent(id: string, body: FormData) {
 
 export async function deleteFeaturedTalent(id: string) {
   const { data } = await api.delete(endpoints.marketing.talent(id))
+  return parseResponse(deletedSchema, data)
+}
+
+export async function listTestimonials() {
+  const { data } = await api.get(endpoints.marketing.testimonials)
+  return parseResponse(testimonialListSchema, data).data
+}
+
+export async function createTestimonial(body: FormData) {
+  const { data } = await api.post(endpoints.marketing.testimonials, body)
+  return parseResponse(testimonialResponseSchema, data)
+}
+
+export async function updateTestimonial(id: string, body: FormData) {
+  const { data } = await api.patch(endpoints.marketing.testimonial(id), body)
+  return parseResponse(testimonialResponseSchema, data)
+}
+
+export async function deleteTestimonial(id: string) {
+  const { data } = await api.delete(endpoints.marketing.testimonial(id))
   return parseResponse(deletedSchema, data)
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { GradientButton, Page } from "@/components/crm/ui"
 import { getErrorMessage } from "@/lib/api/axiosInterceptor"
-import type { Banner, FeaturedTalent, MarketingEvent } from "@/lib/schemas/marketing.schema"
+import type { Banner, FeaturedTalent, MarketingEvent, Testimonial } from "@/lib/schemas/marketing.schema"
 import {
   createBanner,
   createEvent,
@@ -18,6 +18,10 @@ import {
   updateBanner,
   updateEvent,
   updateFeaturedTalent,
+  createTestimonial,
+  deleteTestimonial,
+  listTestimonials,
+  updateTestimonial,
 } from "@/lib/services/marketing"
 
 const field = "h-11 w-full rounded-xl border border-white/10 bg-[#2c2c2c] px-3 text-sm text-white outline-none"
@@ -26,6 +30,7 @@ export function BannersView() {
   const [banners, setBanners] = useState<Banner[]>([])
   const [events, setEvents] = useState<MarketingEvent[]>([])
   const [talents, setTalents] = useState<FeaturedTalent[]>([])
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -33,11 +38,12 @@ export function BannersView() {
   function load() {
     setLoading(true)
     setError("")
-    Promise.all([listBanners(), listEvents(), listFeaturedTalents()])
-      .then(([nextBanners, nextEvents, nextTalents]) => {
+    Promise.all([listBanners(), listEvents(), listFeaturedTalents(), listTestimonials()])
+      .then(([nextBanners, nextEvents, nextTalents, nextTestimonials]) => {
         setBanners(nextBanners)
         setEvents(nextEvents)
         setTalents(nextTalents)
+        setTestimonials(nextTestimonials)
       })
       .catch(() => setError("Could not load marketing content."))
       .finally(() => setLoading(false))
@@ -64,8 +70,87 @@ export function BannersView() {
         <BannerForm items={banners} onChange={load} />
         <EventForm items={events} onChange={load} />
         <TalentForm items={talents} onChange={load} />
+        <TestimonialForm items={testimonials} onChange={load} />
       </div>
     </Page>
+  )
+}
+
+function TestimonialForm({ items, onChange }: { items: Testimonial[]; onChange: () => void }) {
+  const [type, setType] = useState<"written" | "video">("video")
+  const [name, setName] = useState("")
+  const [role, setRole] = useState("")
+  const [quote, setQuote] = useState("")
+  const [sortOrder, setSortOrder] = useState("0")
+  const [media, setMedia] = useState<File | null>(null)
+  const [pending, setPending] = useState(false)
+
+  async function create() {
+    if (!media) return toast.error(type === "video" ? "Choose a video." : "Choose a client photo.")
+    if (type === "video" && media.size > 100 * 1024 * 1024) return toast.error("Videos must be 100 MB or smaller.")
+    if (type === "written" && media.size > 5 * 1024 * 1024) return toast.error("Photos must be 5 MB or smaller.")
+    const body = new FormData()
+    body.set("type", type)
+    body.set("name", name)
+    body.set("role", role)
+    body.set("quote", quote)
+    body.set("sortOrder", sortOrder || "0")
+    body.set("isActive", "true")
+    body.set("media", media)
+    setPending(true)
+    try {
+      const result = await createTestimonial(body)
+      toast.success(result.message)
+      setName("")
+      setRole("")
+      setQuote("")
+      setMedia(null)
+      onChange()
+    } catch (caught) {
+      toast.error(getErrorMessage(caught))
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold text-white">Client testimonials</h2>
+      <p className="mt-1 text-sm text-[#B4B4B4]">Add a video with name and shoot with. Videos can be up to 100 MB.</p>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <select className={field} value={type} onChange={(event) => { setType(event.target.value as "written" | "video"); setMedia(null) }}>
+          <option value="video">Video</option>
+          <option value="written">Written testimonial</option>
+        </select>
+        <input className={field} value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} placeholder="Sort order" />
+        <input className={field} value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" maxLength={80} />
+        <input className={field} value={role} onChange={(event) => setRole(event.target.value)} placeholder="Shoot with" maxLength={100} />
+        {type === "written" ? (
+          <textarea className={`${field} h-24 py-2 md:col-span-2`} value={quote} onChange={(event) => setQuote(event.target.value)} placeholder="Client testimonial" maxLength={1000} />
+        ) : null}
+        <input
+          key={type}
+          className={field}
+          type="file"
+          accept={type === "video" ? "video/mp4,video/webm,video/quicktime" : "image/jpeg,image/png,image/webp"}
+          onChange={(event) => setMedia(event.target.files?.[0] ?? null)}
+        />
+      </div>
+      <GradientButton className="mt-4" onClick={() => void create()}>
+        {pending ? "Uploading…" : type === "video" ? "Add video testimonial" : "Add written testimonial"}
+      </GradientButton>
+      <Rows
+        rows={items.map((item) => ({
+          id: item._id,
+          imageUrl: item.imageUrl,
+          videoUrl: item.videoUrl,
+          title: `${item.type === "video" ? "Video" : "Written"} · ${item.name} · Shoot with ${item.role}`,
+          active: item.isActive,
+        }))}
+        onToggle={(id, isActive) => updateTestimonial(id, flag(isActive)).then(onChange)}
+        onDelete={(id) => deleteTestimonial(id).then(onChange)}
+      />
+    </section>
   )
 }
 
@@ -278,7 +363,7 @@ function Rows({
   onToggle,
   onDelete,
 }: {
-  rows: { id: string; imageUrl: string; title: string; active: boolean }[]
+  rows: { id: string; imageUrl: string; videoUrl?: string; title: string; active: boolean }[]
   onToggle: (id: string, isActive: boolean) => Promise<unknown>
   onDelete: (id: string) => Promise<unknown>
 }) {
@@ -291,6 +376,7 @@ function Rows({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={row.imageUrl} alt="" className="h-14 w-24 rounded-lg object-cover" />
           ) : null}
+          {row.videoUrl ? <video src={row.videoUrl} className="h-14 w-24 rounded-lg bg-black object-cover" muted preload="metadata" /> : null}
           <p className="min-w-0 flex-1 truncate text-sm text-white">{row.title}</p>
           <button
             type="button"

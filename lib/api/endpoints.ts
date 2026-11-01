@@ -34,5 +34,7 @@ export const endpoints = {
     event: (id: string) => `/api/marketing/events/${id}`,
     talents: "/api/marketing/talents",
     talent: (id: string) => `/api/marketing/talents/${id}`,
+    testimonials: "/api/marketing/testimonials",
+    testimonial: (id: string) => `/api/marketing/testimonials/${id}`,
   },
 } as const

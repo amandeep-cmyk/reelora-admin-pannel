@@ -255,11 +255,7 @@ export const teamCreateSchema = z
     password: z
       .string()
       .min(8, "Password must be at least 8 characters.")
-      .max(100, "Password must be 100 characters or less.")
-      .regex(/[A-Z]/, "Include an uppercase letter.")
-      .regex(/[a-z]/, "Include a lowercase letter.")
-      .regex(/\d/, "Include a number.")
-      .regex(/[@$!%*?&]/, "Include one of @$!%*?&."),
+      .max(100, "Password must be 100 characters or less."),
     city: z.string().trim().min(1, "Enter a city.").max(80, "City must be 80 characters or less."),
     place: z.string().trim().min(1, "Enter a place.").max(120, "Place must be 120 characters or less."),
   })

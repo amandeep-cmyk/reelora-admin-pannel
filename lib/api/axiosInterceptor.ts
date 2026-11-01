@@ -39,6 +39,7 @@ export function getErrorMessage(error: unknown) {
       if (typeof body.message === "string" && body.message.trim()) return body.message
     }
     if (!error.response) return "Cannot reach the server. Check that the API is running."
+    if (error.response.status === 413) return "This upload is too large. Use fewer or smaller files."
     if (error.response.status === 429) return "Please wait a moment and try again."
   }
   return "Something went wrong. Please try again."
