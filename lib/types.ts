@@ -86,6 +86,7 @@ export type Category = {
   name: string
   status: "Active" | "Inactive"
   verticals: Array<"shooting" | "events">
+  icon: string
 }
 
 export type Member = {

@@ -114,6 +114,7 @@ export function mapCategory(row: ApiCategory): Category {
     name: row.name,
     status: activeLabel(row.isActive),
     verticals: row.verticals?.length ? row.verticals : ["shooting", "events"],
+    icon: row.icon || "",
   }
 }
 

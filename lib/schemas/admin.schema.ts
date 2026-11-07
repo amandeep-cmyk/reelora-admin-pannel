@@ -280,6 +280,7 @@ export const teamCreateSchema = z
 export const categorySchema = z.object({
   _id: z.string(),
   name: z.string(),
+  icon: z.string().optional().default(""),
   isActive: z.boolean(),
   verticals: z.array(z.enum(["shooting", "events"])).optional().default(["shooting", "events"]),
   createdAt: z.string().optional(),
@@ -289,6 +290,7 @@ export const categorySchema = z.object({
 export const categoryBodySchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters.").max(60, "Name must be 60 characters or less."),
   verticals: z.array(z.enum(["shooting", "events"])).min(1, "Pick at least one vertical."),
+  icon: z.string().trim().max(300).optional().default(""),
 })
 
 export const paginationSchema = z.object({

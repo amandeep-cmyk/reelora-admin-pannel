@@ -47,15 +47,16 @@ export function CategoriesView() {
     refresh()
   }, [])
 
-  async function saveCategory(name: string, verticals: Array<"shooting" | "events">) {
+  async function saveCategory(name: string, verticals: Array<"shooting" | "events">, icon: string) {
     if (editing) {
-      const result = await updateCategory(editing.id, { name, verticals })
+      const result = await updateCategory(editing.id, { name, verticals, icon })
       setCategories((list) =>
         list.map((item) =>
           item.id === editing.id
             ? {
                 ...item,
                 name: result.data.name,
+                icon: result.data.icon || "",
                 verticals: result.data.verticals?.length
                   ? result.data.verticals
                   : ["shooting", "events"],
@@ -64,10 +65,11 @@ export function CategoriesView() {
         ),
       )
     } else {
-      const result = await createCategory(name, verticals)
+      const result = await createCategory(name, verticals, icon)
       const created: Category = {
         id: result.data._id,
         name: result.data.name,
+        icon: result.data.icon || "",
         status: result.data.isActive ? "Active" : "Inactive",
         verticals: result.data.verticals?.length ? result.data.verticals : ["shooting", "events"],
       }
@@ -116,7 +118,7 @@ export function CategoriesView() {
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="text-[#B4B4B4]">
-                {["Name", "Verticals", "Listings", "Status", "Action"].map((head) => (
+                {["Icon", "Name", "Verticals", "Listings", "Status", "Action"].map((head) => (
                   <th key={head} className="px-3 py-3 font-medium">
                     {head}
                   </th>
@@ -126,6 +128,12 @@ export function CategoriesView() {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="border-t border-white/8 text-white">
+                  <td className="px-3 py-4">
+                    {row.icon ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={row.icon} alt="" className="h-8 w-8 object-contain" />
+                    ) : null}
+                  </td>
                   <td className="px-3 py-4">{row.name}</td>
                   <td className="px-3 py-4 text-[#B4B4B4]">{verticalLabel(row.verticals)}</td>
                   <td className="px-3 py-4">{String(counts[row.name] ?? 0)}</td>
@@ -144,7 +152,7 @@ export function CategoriesView() {
               ))}
               {rows.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-10 text-[#B4B4B4]">
+                  <td colSpan={6} className="px-3 py-10 text-[#B4B4B4]">
                     No matching records.
                   </td>
                 </tr>
@@ -166,8 +174,9 @@ export function CategoriesView() {
           title={editing ? "Edit category" : "Add category"}
           initialName={editing?.name ?? ""}
           initialVerticals={editing?.verticals ?? ["shooting", "events"]}
-          onSubmit={(name, verticals) => {
-            void saveCategory(name, verticals).catch(() => {})
+          initialIcon={editing?.icon ?? ""}
+          onSubmit={(name, verticals, icon) => {
+            void saveCategory(name, verticals, icon).catch(() => {})
           }}
         />
       </Modal>
@@ -179,14 +188,17 @@ function CategoryFields({
   title,
   initialName,
   initialVerticals,
+  initialIcon,
   onSubmit,
 }: {
   title: string
   initialName: string
   initialVerticals: Array<"shooting" | "events">
-  onSubmit: (name: string, verticals: Array<"shooting" | "events">) => void
+  initialIcon: string
+  onSubmit: (name: string, verticals: Array<"shooting" | "events">, icon: string) => void
 }) {
   const [name, setName] = useState(initialName)
+  const [icon, setIcon] = useState(initialIcon)
   const [shooting, setShooting] = useState(initialVerticals.includes("shooting"))
   const [events, setEvents] = useState(initialVerticals.includes("events"))
 
@@ -200,11 +212,21 @@ function CategoryFields({
         if (shooting) verticals.push("shooting")
         if (events) verticals.push("events")
         if (verticals.length === 0) return
-        onSubmit(name.trim(), verticals)
+        onSubmit(name.trim(), verticals, icon.trim())
       }}
     >
       <h2 className="text-lg font-semibold">{title}</h2>
       <TextField label="Name" value={name} placeholder="Drone pilots" onChange={setName} />
+      <TextField
+        label="Icon PNG path"
+        value={icon}
+        placeholder="/category-icons/cameras.png"
+        onChange={setIcon}
+      />
+      {icon ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={icon} alt="" className="h-10 w-10 object-contain" />
+      ) : null}
       <fieldset className="grid gap-2">
         <legend className="text-sm text-[#B4B4B4]">Verticals</legend>
         <label className="flex items-center gap-2 text-sm text-white">
