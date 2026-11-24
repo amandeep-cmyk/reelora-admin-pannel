@@ -89,7 +89,7 @@ export function LoginForm() {
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="admin@relora.app"
+          placeholder="admin@example.com"
           autoComplete="email"
           disabled={mode === "reset"}
         />

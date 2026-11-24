@@ -180,7 +180,7 @@ function MemberFields({
     >
       <TextField label="Name" value={fullName} placeholder="Ravi Shah" onChange={setFullName} />
       <TextField label="Phone" value={phone} placeholder="9876543210" onChange={setPhone} />
-      <TextField label="Email" value={email} placeholder="ravi@relora.app" onChange={setEmail} />
+      <TextField label="Email" value={email} placeholder="ravi@example.com" onChange={setEmail} />
       <TextField label="Password" value={password} placeholder="Password1!" type="password" onChange={setPassword} />
       <CityStatePicker
         city={city}

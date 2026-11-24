@@ -318,7 +318,7 @@ function TalentForm({ items, onChange }: { items: FeaturedTalent[]; onChange: ()
 
   return (
     <section>
-      <h2 className="text-lg font-semibold text-white">Top influencers</h2>
+      <h2 className="text-lg font-semibold text-white">Talent spotlights</h2>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <input className={field} value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" />
         <input
